@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <string.h>
 
+static char * s;        /* string pattern that needs to search */
 static int type_flag;   /* type of files need to be open */
 
 #define REGULAR_F   0x7   /* regular files */
@@ -95,7 +96,7 @@ ftw(char * pathname, void (* func)(char *))
     }
     else if (S_ISLNK(statbuf.st_mode))  /* a symbolic link */
     {
-        printf("%s is a symbolic link.\n");
+        printf("\"%s\" is a symbolic link.\n", pathname);
     }
     
 }
@@ -137,7 +138,7 @@ search(char * filename)
 int
 main (int argc, char * argv[])
 {
-    char * pathname, * s;
+    char * pathname;
     int sym_link;
     
     pathname = NULL;        /* init w/ NULL */
