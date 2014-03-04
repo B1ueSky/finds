@@ -9,14 +9,97 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include <stdio.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <string.h>
 
 #define REGULAR_F   0   /* regular files */
 #define C_F         1   /* c files */
 #define H_F         2   /* h files */
 #define S_F         4   /* S files */
 
-static int ftw()
+static void ftw(char * pathname, void (* func)(char *));
+static void search(char *); 
+
+/* 
+ * This function is modified from Program 4.7 
+ * in Book Advanced Programming in the UNIX Environment, 
+ * written by W. Richard Stevens
+ *
+ * Descend through the hierarchy, starting at "pathname".
+ * If "pathname" is anything other than a directory, 
+ * we lstat() it, call func(), and return.
+ * For a directory, we call ourself recursively 
+ * for each name in the directory.
+ */
+static void
+ftw(char * pathname, void (* func)(char *))
+{
+    struct stat     statbuf;
+    struct dirent   * dirp;
+    DIR             * dp;
+    char            * ptr;
+
+    if (lstat(pathname, &statbuf) < 0)  /* stat error */
+    {
+        printf("ERROR: stat error on %s\n", pathname);
+        return;
+    }
+    
+    if (S_ISDIR(statbuf.st_mode))       /* a directory */
+    {
+        /*
+         * It's a directory.
+         * So process each filename in the directory.
+         */
+        ptr = pathname + strlen(pathname);  /* point to end of pathname */
+        *ptr++ = '/';
+        *ptr = 0;
+
+        if ((dp = opendir(pathname)) == NULL)   /* can NOT read directory */
+        {
+            printf("ERROR: can NOT read directory \"%s\"\n", pathname);
+            return;
+        }
+
+        /* process all files inside one by one */        
+        while ((dirp = readdir(dp)) != NULL)
+        {
+            if (strcmp(dirp->d_name, ".") == 0 || strcmp(dirp->d_name, "..") == 0)
+            {
+                continue;   /* ignore dot and dot dot */
+            }
+
+            strcpy(ptr, dirp->d_name);  /* append name after slash */
+            
+            ftw(pathname, func);    /* recursively call ftw */
+        }
+        
+        ptr[-1] = 0;    /* erase everything from slash onwards */
+
+        if (closedir(dp) < 0)
+        {
+            printf("ERROR: can NOT close directory %s\n", pathname);
+            return;
+        }
+
+    }
+    else if (S_ISREG(statbuf.st_mode))  /* a regular file */
+    {
+        func(pathname);
+    }
+    else if (S_ISLNK(statbuf.st_mode))  /* a symbolic link */
+    {
+        printf("%s is a symbolic link.\n");
+    }
+    
+}
+
+static void 
+search(char * filename)
+{
+    printf("file: %s\n", filename);
+}
 
 int
 main (int argc, char * argv[])
@@ -86,11 +169,13 @@ main (int argc, char * argv[])
     
     if (pathname == NULL || s == NULL)
     {
-        printf("%s", "Require pathname and s!");
+        printf("ERROR: requires pathname and s!\n");
+        printf("Usage:	$finds -p pathname [-f c|h|S] [-l] -s s\n");
         return 1;
     }
 
     
     /* already get all info, start processing */
     printf("pathname: %s\ntype_flag: %d\nsym_link: %d\ns: %s\n", pathname, type_flag, sym_link, s);
+    ftw(pathname, &search);
 }
