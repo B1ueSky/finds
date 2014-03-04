@@ -1,9 +1,9 @@
 /* File:	finds.c
  * Name:	Tianyou Luo
  * Date:	03/17/14
- * Purpose: 	CS410 Assignment 2
- *		  search all files with a given type and 
- *		  print out the lines included string s in certain pattern
+ * Purpose: CS410 Assignment 2
+ *              search all files with a given type and 
+ *              print out the lines included string s in certain pattern
  * Usage:	$finds -p pathname [-f c|h|S] [-l] -s s
  */
 
@@ -23,6 +23,7 @@ static int type_flag;   /* type of files need to be open */
 
 static void ftw(char * pathname, void (* func)(char *));
 static void search(char *); 
+static int checkFileExtension(char *);
 
 
 
@@ -92,7 +93,10 @@ ftw(char * pathname, void (* func)(char *))
     }
     else if (S_ISREG(statbuf.st_mode))  /* a regular file */
     {
-        func(pathname);
+        if (checkFileExtension(pathname))   /* whether open this file */
+        {
+            func(pathname);
+        }
     }
     else if (S_ISLNK(statbuf.st_mode))  /* a symbolic link */
     {
@@ -101,14 +105,14 @@ ftw(char * pathname, void (* func)(char *))
     
 }
 
-static void 
-search(char * filename)
+static int
+checkFileExtension(char * filename)
 {
-    // printf("file: %s\n", filename);
     char    * file_extension;
     int     file_type;
 
-    file_extension = filename + strlen(filename) - 2;   /* point to the last two char in pathname */
+    /* point to the last two char in pathname */
+    file_extension = filename + strlen(filename) - 2;   
 
     /* get file type */
     if (strcmp(file_extension, ".c") == 0)
@@ -128,10 +132,14 @@ search(char * filename)
         file_type = 0x0;
     }
     
-    if (file_type & type_flag)  /* decide whether the file needs to be open */
-    {
-        printf("%s\n", filename);
-    }    
+    return (file_type & type_flag);  /* decide whether the file needs to be open */    
+}
+
+static void 
+search(char * filename)
+{
+    printf("file: %s\n", filename);
+    
     
 }
 
