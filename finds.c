@@ -13,13 +13,18 @@
 #include <dirent.h>
 #include <string.h>
 
-#define REGULAR_F   0   /* regular files */
-#define C_F         1   /* c files */
-#define H_F         2   /* h files */
-#define S_F         4   /* S files */
+static int type_flag;   /* type of files need to be open */
+
+#define REGULAR_F   0x7   /* regular files */
+#define C_F         0x1   /* c files */
+#define H_F         0x2   /* h files */
+#define S_F         0x4   /* S files */
 
 static void ftw(char * pathname, void (* func)(char *));
 static void search(char *); 
+
+
+
 
 /* 
  * This function is modified from Program 4.7 
@@ -98,14 +103,42 @@ ftw(char * pathname, void (* func)(char *))
 static void 
 search(char * filename)
 {
-    printf("file: %s\n", filename);
+    // printf("file: %s\n", filename);
+    char    * file_extension;
+    int     file_type;
+
+    file_extension = filename + strlen(filename) - 2;   /* point to the last two char in pathname */
+
+    /* get file type */
+    if (strcmp(file_extension, ".c") == 0)
+    {  
+        file_type = C_F;
+    }
+    else if (strcmp(file_extension, ".h") == 0)
+    {
+        file_type = H_F;
+    }
+    else if (strcmp(file_extension, ".S") == 0)
+    {
+        file_type = S_F;
+    }
+    else
+    {
+        file_type = 0x0;
+    }
+    
+    if (file_type & type_flag)  /* decide whether the file needs to be open */
+    {
+        printf("%s\n", filename);
+    }    
+    
 }
 
 int
 main (int argc, char * argv[])
 {
     char * pathname, * s;
-    int type_flag, sym_link;
+    int sym_link;
     
     pathname = NULL;        /* init w/ NULL */
     s = NULL;               /* init w/ NULL */
@@ -176,6 +209,6 @@ main (int argc, char * argv[])
 
     
     /* already get all info, start processing */
-    printf("pathname: %s\ntype_flag: %d\nsym_link: %d\ns: %s\n", pathname, type_flag, sym_link, s);
+    printf("pathname: %s\ntype_flag: %d\nsym_link: %d\ns: %s\n\n", pathname, type_flag, sym_link, s);
     ftw(pathname, &search);
 }
