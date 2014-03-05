@@ -3,4 +3,4 @@ finds: finds.c
 
 
 clean:
-	rm finds
+	rm finds *~
