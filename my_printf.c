@@ -28,25 +28,28 @@ __asm__("movl %ebp,%eax");
 void
 my_printf(const char * format, ...)
 {
+	printf("%s\n", format);
+	//printf("%s\n", *(&format+1));
+	//printf("%d\n", *(int *)(&format+2));
     int i = 0;			/* count the number of %* in format */
     char * ptr;			/* point to a char in format */
     char * result;		/* final str to print out */
     char * num;
 	int c;
 
-    printf("%s\n", *(&format+1));
     
-    ptr = format;
+    ptr = (char *)format;
 
     while ((c = *ptr++) != 0)
     {
+    	printf("%c\n",c);
     	if (c == '%')
     	{
     		switch (*ptr)
     		{
     			case 's':
     				i++;
-    				write(1, *(char *)(&format+i), strlen(*(char *)(&format+i)));
+    				write(1, *(char *)(&format+i), strlen((char *)(&format+i)));
     				ptr++;
     				break;
     			case 'c':
@@ -96,6 +99,6 @@ my_printf(const char * format, ...)
 int 
 main(int argc, char * argv[])
 {
-    my_printf("asdfasdfasdf%s%d%s%d\n", "jkl",123,"werwerwrwerwer",233);
+    my_printf("asdf%s%d%s%d\n", "jkl",123,"werwerwrwerwer",233);
     return 0;
 }
