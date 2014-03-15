@@ -154,20 +154,15 @@ search(char * filename)
         char * ptr = line;
         while (*ptr != 0)
         {
-            //printf("str: %s\n", ptr);
-            //printf("pattern: %s\n", pattern);
 
             int r;
             if ((r = matchStr(ptr, pattern)) == 1)
             {
-                //printf("matched str: %s\n", ptr);
-                //printf("pattern: %s\n", pattern);
                 printf("file: %s\n", filename);
                 printf("line: %s\n", line);
                 
                 break;
             }
-            //printf("r = %d\n", r);
 
             ptr++;
         }
@@ -181,8 +176,6 @@ search(char * filename)
 static int
 matchStr(char * str, char * pattern)
 {
-    //printf("pattern: %s\n", pattern);
-    //printf("string: %s\n", str);
     int len_str, len_pat, c;
     /* base case */
     
