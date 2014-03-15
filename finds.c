@@ -12,10 +12,9 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <string.h>
-#include <stdlib.h>
 
 
-static char * pattern;        /* string pattern that needs to search */
+static char pattern[1024];        /* string pattern that needs to search */
 static int type_flag;   /* type of files need to be open */
 
 #define REGULAR_F   0x7   /* regular files */
@@ -81,9 +80,7 @@ ftw(char * pathname, void (* func)(char *))
             {
                 continue;   /* ignore dot and dot dot */
             }
-
             strcpy(ptr, dirp->d_name);  /* append name after slash */
-            
             ftw(pathname, func);    /* recursively call ftw */
         }
         
@@ -105,7 +102,7 @@ ftw(char * pathname, void (* func)(char *))
     }
     else if (S_ISLNK(statbuf.st_mode))  /* a symbolic link */
     {
-        printf("\"%s\" is a symbolic link.\n", pathname);
+        //printf("\"%s\" is a symbolic link.\n", pathname);
     }
     
 }
@@ -143,31 +140,40 @@ checkFileExtension(char * filename)
 static void 
 search(char * filename)
 {
-    printf("file: %s\n", filename);
-    
-    FILE * file;
-    char * line;
+    FILE * fptr;
+    char line[1024];
 
-    if ((file = fopen(filename, O_RDONLY)) != 0)
+    if ((fptr = fopen(filename, "r")) == NULL)
     {
         write(2, "ERROR: can NOT open file!!\n", 27);
+        return;
     }
 
-    while (fgets(file, line) != 0)
+    while (fgets(line, 1024, fptr) != NULL)
     {
         char * ptr = line;
         while (*ptr != 0)
         {
-            if (matchStr(ptr, pattern))
+            //printf("str: %s\n", ptr);
+            //printf("pattern: %s\n", pattern);
+
+            int r;
+            if ((r = matchStr(ptr, pattern)) == 1)
             {
+                //printf("matched str: %s\n", ptr);
+                //printf("pattern: %s\n", pattern);
                 printf("file: %s\n", filename);
                 printf("line: %s\n", line);
+                
                 break;
             }
+            //printf("r = %d\n", r);
 
             ptr++;
         }
     }
+
+    fclose(fptr);
 
     
 }
@@ -175,23 +181,37 @@ search(char * filename)
 static int
 matchStr(char * str, char * pattern)
 {
+    //printf("pattern: %s\n", pattern);
+    //printf("string: %s\n", str);
     int len_str, len_pat, c;
     /* base case */
     
     len_str = strlen(str);
     len_pat = strlen(pattern);
-    if (len_str == 0 && len_pat == 0)
+    if (len_pat == 0)
     {
         return 1;
-    } 
-    else if (len_str == 0 || len_pat == 0)
+    }
+    
+    else if (len_str == 0)
     {
+        if (len_pat == 2 && ((c = *(pattern+2)) == '*' || c == '?'))
+        {
+            return 1;
+        }
+
         return 0;
     }
+    
 
-
-    if ((c = *(str+1)) == '?')
+    if ((c = *(pattern+1)) == '?')
     {
+        /* ignore current char in pattern */
+        if (matchStr(str, pattern+2))
+        {
+            return 1;            
+        }
+
         /* compare current char in pattern */
         if (MATCH(*pattern, *str))  
         {
@@ -201,15 +221,17 @@ matchStr(char * str, char * pattern)
             }
         }
 
-        /* ignore current char in pattern */
-        if (matchStr(str, pattern+2))
-        {
-            return 1;            
-        }
+        
 
     }
     else if (c == '*')
     {
+        /* ignore current char in pattern */
+        if (matchStr(str, pattern+2))
+        {
+            return 1;
+        }
+
         /* compare current char in pattern */
         if (MATCH(*pattern, *str))
         {
@@ -219,22 +241,23 @@ matchStr(char * str, char * pattern)
             }
         }
 
-        /* ignore current char in pattern */
-        if (matchStr(str, pattern+2))
-        {
-            return 1;
-        }
+        
     }
     else 
     {
         if (MATCH(*pattern, *str))
-            return 1;
-
+        {
+            if (matchStr(str+1, pattern+1))
+            {
+                return 1;
+            }
+        }
         return 0;
     }
 
     return 0;
 }
+
 
 int
 main (int argc, char * argv[])
@@ -243,7 +266,6 @@ main (int argc, char * argv[])
     int sym_link;
     
     pathname = NULL;        /* init w/ NULL */
-    pattern = NULL;         /* init w/ NULL */
     type_flag = REGULAR_F;  /* type of files which need to open */
     sym_link = 0;           /* default not search symbolic links */
     
@@ -276,7 +298,13 @@ main (int argc, char * argv[])
                 sym_link = 1;
                 break;
             case 's':
-                pattern = optarg;
+                strcpy(pattern, optarg);    /* NOTE: 
+                                             * don't make pattern a pointer,
+                                             * and assign pattern to optarg 
+                                             * because if so, pattern may be overwritten
+                                             * by pathname when append filename to the end
+                                             * of pathname.
+                                             */
                 break;
             case '?':
                 if (optopt == 'p')
