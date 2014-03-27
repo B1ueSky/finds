@@ -103,6 +103,19 @@ ftw(char * pathname, void (* func)(char *))
     else if (S_ISLNK(statbuf.st_mode))  /* a symbolic link */
     {
         //printf("\"%s\" is a symbolic link.\n", pathname);
+        ptr = pathname + strlen(pathname);  /* point to end of pathname */
+        *ptr++ = '/';
+        *ptr = 0;
+        int count = 0;
+        
+        if ((count = readlink(pathname, ptr, 1024)) < 0)
+        {
+            write(2, "ERROR: can NOT read link!\n", 26);
+            return;
+        }
+        *ptr = 0;
+        ftw(pathname, func);
+        ptr[-1] = 0;    /* erase everything from slash onwards */
     }
     
 }
@@ -332,6 +345,6 @@ main (int argc, char * argv[])
 
     
     /* already get all info, start processing */
-    printf("pathname: %s\ntype_flag: %d\nsym_link: %d\ns: %s\n\n", pathname, type_flag, sym_link, pattern);
+    // printf("pathname: %s\ntype_flag: %d\nsym_link: %d\ns: %s\n\n", pathname, type_flag, sym_link, pattern);
     ftw(pathname, &search);
 }
