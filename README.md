@@ -13,3 +13,9 @@ Usage:	$finds -p pathname [-f c|h|S] [-l] -s s
 			  symbolic links as well.
 	[-s s]:		required argument, which is specified by the -s flag and 
 			  is followed by the search string "s".
+			  
+
+Note:
+    Right now finds can NOT detect loops in symbolic link, i.e. it may go into a loop forever until some errors arise.
+    
+    And I didn't finish my_printf yet. Sorry about that.
