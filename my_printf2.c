@@ -2,10 +2,10 @@
  * Name:	Tianyou Luo
  * Date:	03/17/14
  * Purpose: same function of printf() in standard I/O libary;
- 			    support the following format codes: %s, %c, %d, %u and %x.
+ 			  support the following format codes: %s, %c, %d, %u and %x.
  * Note:	my_printf cannot hold the situation with only one string as parameter,
- *              i.e. my_printf("...") is not allowed yet.
- *              but you still can use it this way my_printf("%s", "...").
+ *          i.e. my_printf("...") is not allowed yet.
+ *          but you still can use it this way my_printf("%s", "...").
  */
 
 #include "itoa.c"
@@ -21,11 +21,11 @@ void __my_printf(char *, ...);
 int
 check_args(char * fmt, char *args)
 {
-	/*
+	
     printf("check:\n");
     printf("fmt: %s\n", fmt);
     printf("args = %s\n", args);
-    */
+    
     int num1 = 0;   // %
     int num2 = 0;   // ,
     char * ptr = fmt;
@@ -53,67 +53,70 @@ check_args(char * fmt, char *args)
 
 void __my_printf(char * fmt, ...)
 {
-    int max_length = 1024;
-    char * ptr_fmt = fmt;
-    void ** arg = (void **)(&fmt + 1);
-    char buf[max_length], tmp[max_length], c;
-    char * ptr_buf = buf;
-    int i = 0;
-
-    while ((c = *ptr_fmt++) != 0 && i++ < max_length)
-    {
+    char * ptr = fmt;
+    char c;
+    void * arg = &fmt + 1;
+    int d = 1;
+    char * buf[1024];
+    while ((c = *ptr++) != 0)
+    {   
         //printf("%c\n", c);
-        //printf("%s\n", buf);
         // %s, %c, %d, %u and %x
         if (c == '%')
         {
-            if (*ptr_fmt == 's')
+
+            if (*ptr == 's')
             {
-                ptr_buf += strlen(strcpy(ptr_buf, (char *)(*arg++)));
-                ptr_fmt++;
+                write(1, *((&fmt)+d), strlen(*((&fmt)+d)));
+                d++;
+                ptr++;
             } 
-            else if (*ptr_fmt == 'c') 
+            else if (*ptr == 'c') 
             {
-                *ptr_buf++ = (char)(*arg++);
-                ptr_fmt++;
+                write(1, ((&fmt)+d), 1);
+                d++;
+                ptr++;
             } 
-            else if (*ptr_fmt == 'd' || *ptr_fmt == 'u')
+            else if (*ptr == 'd')
             {
-                itoa(tmp, 'd', (int)(*arg++));
-                strcpy(ptr_buf, tmp);
-                ptr_buf += strlen(tmp);
-                ptr_fmt++;
+                itoa(buf, 10, *((&fmt)+d));
+                write(1, buf, strlen(buf));
+                d++;    
+                ptr++;
             }
-            else if (*ptr_fmt == 'x')
+            else if (*ptr == 'u')
             {
-                itoa(tmp, 'x', (int)(*arg++));
-                strcpy(ptr_buf, tmp);
-                ptr_buf += strlen(tmp);
-                ptr_fmt++; 
+                itoa(buf, 10, *((&fmt)+d));
+                write(1, buf, strlen(buf));
+                d++;    
+                ptr++;
             }
-            else    /* alone '%' T T */
+            else if (*ptr == 'x')
             {
-                *ptr_buf++ = '%';
+                itoa(buf, 16, *((&fmt)+d));
+                write(1, buf, strlen(buf));
+                d++;   
+                ptr++; 
+            }
+            else 
+            {
+                write(1, "%", 1);  
             }
         }
         else
         {
-            *ptr_buf++ = c;
+            buf[0] = c;
+            buf[1] = 0;
+            write(1, buf, 1);
         }
     }
-    *ptr_buf = 0;
-    
-    write(1, buf, strlen(buf));
 }
 
-/*
 int 
 main(int argc, char * argv[])
 {
     // func(12, 13, 14, 15, 16);
     my_printf("asdf%%s%d%s%d%c\n", "c" ,123,"werwerwrwerwer",233,'b');
-    my_printf("%s%d\n","asdf");
-    my_printf("%s\n", "zxcv");
+    //my_printf("asdfasd");
     return 0;
 }
-*/

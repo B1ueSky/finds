@@ -18,4 +18,4 @@ Usage:	$finds -p pathname [-f c|h|S] [-l] -s s
 Note:
     Right now finds can NOT detect loops in symbolic link, i.e. it may go into a loop forever until some errors arise.
     
-    And I didn't finish my_printf yet. Sorry about that.
+    my_printf does NOT support a single string as input, i.e. my_printf("...") is not acceptable. But we still can accomplish it like this, my_printf("%s", "...").
