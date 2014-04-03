@@ -14,7 +14,6 @@
 #include <string.h>
 #include "my_printf.c"
 
-
 static char pattern[1024];        /* string pattern that needs to search */
 static int type_flag;   /* type of files need to be open */
 
@@ -54,7 +53,7 @@ ftw(char * pathname, void (* func)(char *))
 
     if (lstat(pathname, &statbuf) < 0)  /* stat error */
     {
-        my_printf("ERROR: stat error on %s\n", pathname);
+        printf("ERROR: stat error on %s\n", pathname);
         return;
     }
     
@@ -70,7 +69,7 @@ ftw(char * pathname, void (* func)(char *))
 
         if ((dp = opendir(pathname)) == NULL)   /* can NOT read directory */
         {
-            my_printf("ERROR: can NOT read directory \"%s\"\n", pathname);
+            printf("ERROR: can NOT read directory \"%s\"\n", pathname);
             return;
         }
 
@@ -89,7 +88,7 @@ ftw(char * pathname, void (* func)(char *))
 
         if (closedir(dp) < 0)
         {
-            my_printf("ERROR: can NOT close directory %s\n", pathname);
+            printf("ERROR: can NOT close directory %s\n", pathname);
             return;
         }
 
@@ -104,6 +103,18 @@ ftw(char * pathname, void (* func)(char *))
     else if (S_ISLNK(statbuf.st_mode))  /* a symbolic link */
     {
         //printf("\"%s\" is a symbolic link.\n", pathname);
+        char sym_buf[1024];
+        int num_char;
+        if ((num_char = readlink(pathname, sym_buf, 1023)) < 0)
+        {
+            write(2, "ERROR: can NOT read link!\n", 26);
+            return;
+        }
+	   sym_buf[num_char] = 0;
+
+        //my_printf("linkname:%s\n", sym_buf);
+        //my_printf("%s\n", canonicalize_file_name(sym_buf));
+        ftw((char *)canonicalize_file_name(sym_buf), func);
     }
     
 }
@@ -163,8 +174,8 @@ search(char * filename)
             int r;
             if ((r = matchStr(ptr, pattern)) == 1)
             {
-                my_printf("file: %s\n", filename);
-                my_printf("line: %s\n", line);
+                printf("file: %s\n", filename);
+                printf("line: %s\n", line);
                 
                 break;
             }
@@ -288,7 +299,7 @@ main (int argc, char * argv[])
                         type_flag = 4;
                         break;
                     default:
-                        my_printf("%s", "Unknown file type.\n");
+                        printf("%s", "Unknown file type.\n");
                         return 1;
                 }
                 break;
@@ -307,31 +318,31 @@ main (int argc, char * argv[])
             case '?':
                 if (optopt == 'p')
                 {
-                    my_printf("%s", "Option -p requires an argument.\n");
+                    printf("%s", "Option -p requires an argument.\n");
                 } 
                 else if (optopt == 'f')
                 {
-                    my_printf("%s", "Option -f requires an argument.\n");
+                    printf("%s", "Option -f requires an argument.\n");
                 }
                 else if (optopt == 's')
                 {
-                    my_printf("%s", "Option -s requires an argument.\n");
+                    printf("%s", "Option -s requires an argument.\n");
                 }
                 else
                 {
-                    my_printf("%s", "Unknown option.\n");
+                    printf("%s", "Unknown option.\n");
                 }
                 return 1;
             default:
-                my_printf("%s", "Error on getopt!\n");
+                printf("%s", "Error on getopt!\n");
                 return 1;
         }
     }
     
     if (pathname == NULL || pattern == NULL)
     {
-        my_printf("%s", "ERROR: requires pathname and s!\n");
-        my_printf("%s", "Usage:	$finds -p pathname [-f c|h|S] [-l] -s s\n");
+        printf("ERROR: requires pathname and s!\n");
+        printf("Usage:	$finds -p pathname [-f c|h|S] [-l] -s s\n");
         return 1;
     }
 
